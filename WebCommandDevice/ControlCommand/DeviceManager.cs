@@ -15,7 +15,7 @@ namespace WebCommandDevice.ControlCommand
         public enum CommandTime
         {
             Delete = 15,
-            GetInfo = 10,
+            GetInfo = 30,
             Upgrade = 30,
             SetOnOff = 20
         }

@@ -28,7 +28,7 @@ namespace WebCommandDevice.Controllers
                 if (DeviceManager.CollectionDeviceCommand.IsEmpty || DeviceManager.CollectionDeviceCommand[deviceId] == 255)
                     DeviceManager.CollectionDeviceCommand[deviceId] = 0;
                 DeviceManager.CollectionDeviceCommand[deviceId]++;
-
+                
                 response = new JObject(
                     new JProperty("GetCommandResponseDto",
                     new JObject(

@@ -140,7 +140,6 @@
   <ItemGroup>
     <Compile Include="App_Start\WebApiConfig.cs" />
     <Compile Include="Command\Commands.cs" />
-    <Compile Include="Command\Device.cs" />
     <Compile Include="Command\MongoDB.cs" />
     <Compile Include="Controllers\SendDeviceController.cs" />
     <Compile Include="Global.asax.cs">

@@ -42,13 +42,11 @@ namespace WebCommandDevice.ControlCommand
             while (true)
             {
                 BasicDeliverEventArgs ea = null;
-
-                if (timeout != null && !_consumer.Queue.Dequeue((Int32) timeout.Value.TotalMilliseconds, out ea))
-                    return "NotFound";
-                else
-                    ea = _consumer.Queue.Dequeue();
-
                 Byte[] body = null;
+
+                if (timeout == null) ea = _consumer.Queue.Dequeue();
+                else if (!_consumer.Queue.Dequeue((Int32)timeout.Value.TotalMilliseconds, out ea)) return "NotFound";
+
                 body = ea.Body;
                 var message = Encoding.UTF8.GetString(body);
 
