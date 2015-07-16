@@ -59,7 +59,7 @@ namespace WebControlDevice.Controllers
             {
                 await log.SaveCommandDeviceAsync(deviceId, command);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return InternalServerError();
             }
