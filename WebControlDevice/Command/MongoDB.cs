@@ -11,7 +11,7 @@ using MongoDB.Bson.Serialization;
 using MongoDB.Driver;
 using Newtonsoft.Json.Linq;
 
-namespace WebControlDevice.Commands
+namespace WebControlDevice.Command
 {
     class MongoDB
     {
@@ -30,7 +30,13 @@ namespace WebControlDevice.Commands
 
     class Logging : MongoDB
     {
-        public async Task SaveCommandDeviceAsync(String deviceId, String jsonCommand)
+        /// <summary>
+        /// Сохранение команды в истории команд устройства
+        /// </summary>
+        /// <param name="deviceId">ID устройства</param>
+        /// <param name="jsonCommand">Команда, посылаемая устройству</param>
+        /// <returns></returns>
+        public async Task SaveHistoryCommandAsync(String deviceId, String jsonCommand)
         {
             var collection = database.GetCollection<BsonDocument>(deviceId);
 
@@ -42,7 +48,12 @@ namespace WebControlDevice.Commands
             }
         }
 
-        public async Task<List<String>> CommandHistory(String deviceId)
+        /// <summary>
+        /// Получение истории команд конкретного устройства
+        /// </summary>
+        /// <param name="deviceId">ID устройства</param>
+        /// <returns></returns>
+        public async Task<List<String>> GetHistoryCommandAsync(String deviceId)
         {
             var collection = database.GetCollection<BsonDocument>(deviceId);
 
