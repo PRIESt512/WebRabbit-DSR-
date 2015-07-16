@@ -127,8 +127,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="App_Start\WebApiConfig.cs" />
+    <Compile Include="ControlCommand\Device.cs" />
     <Compile Include="ControlCommand\DeviceManager.cs" />
-    <Compile Include="ControlCommand\Rabbit.cs" />
+    <Compile Include="ControlCommand\Base.cs" />
     <Compile Include="ControlCommand\RabbitReceiver.cs" />
     <Compile Include="ControlCommand\RabbitSender.cs" />
     <Compile Include="Controllers\ControlDeviceController.cs" />

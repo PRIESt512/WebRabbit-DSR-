@@ -7,7 +7,22 @@ using RabbitMQ.Client;
 
 namespace WebCommandDevice.ControlCommand
 {
-    public abstract class Rabbit : IDisposable
+    public interface IReceiveCommand : IDisposable
+    {
+        Boolean IsCommand();
+        String GetCommand(TimeSpan timeSpan);
+        Task<String> GetCommandAsync(TimeSpan timeSpan);
+        Int32 CountCommand();
+        void CleanCommand();
+    }
+
+    public interface ISenderCommand : IDisposable
+    {
+        void SenderCommand(String command);
+        Task SenderCommandAsync(String command);
+    }
+
+    public abstract class RabbitBase : IDisposable
     {
         protected String _deviceId;
         protected static readonly String _exchange = "commads";
@@ -25,7 +40,7 @@ namespace WebCommandDevice.ControlCommand
 
         protected abstract void Dispose(Boolean flag);
 
-        ~Rabbit()
+        ~RabbitBase()
         {
             Dispose(false);
         }

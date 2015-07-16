@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebControlDevice", "WebComm
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebSendCommandDevice", "WebControlDevice\WebSendCommandDevice.csproj", "{7FCD73AC-6533-4534-8F5E-2379D028BCEF}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NUnitTests", "NUnitTests\NUnitTests.csproj", "{3CA3BAA5-3CDA-47A2-A767-6A3E797BD448}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{7FCD73AC-6533-4534-8F5E-2379D028BCEF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7FCD73AC-6533-4534-8F5E-2379D028BCEF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7FCD73AC-6533-4534-8F5E-2379D028BCEF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3CA3BAA5-3CDA-47A2-A767-6A3E797BD448}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3CA3BAA5-3CDA-47A2-A767-6A3E797BD448}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3CA3BAA5-3CDA-47A2-A767-6A3E797BD448}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3CA3BAA5-3CDA-47A2-A767-6A3E797BD448}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

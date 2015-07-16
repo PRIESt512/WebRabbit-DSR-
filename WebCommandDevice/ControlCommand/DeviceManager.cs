@@ -14,10 +14,10 @@ namespace WebCommandDevice.ControlCommand
 
         public enum CommandTime
         {
-            Delete = 3,
+            Delete = 15,
             GetInfo = 10,
-            Upgrade = 10,
-            SetOnOff = 8
+            Upgrade = 30,
+            SetOnOff = 20
         }
     }
 }

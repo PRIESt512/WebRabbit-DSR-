@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using System.Web.Http;
 using Newtonsoft.Json.Linq;
 using WebCommandDevice.ControlCommand;
-using static Newtonsoft.Json.Linq.JProperty;
 
 namespace WebCommandDevice.Controllers
 {
@@ -15,14 +14,14 @@ namespace WebCommandDevice.Controllers
     {
         [HttpGet]
         [ActionName("commands")]
-        public IHttpActionResult CheckCommand(String deviceId, Int32 timeout)
+        public async Task<IHttpActionResult> CheckCommand(String deviceId, Int32 timeout)
         {
             var _timeout = new TimeSpan(0, 0, 0, timeout);
             String result = String.Empty;
             JObject response;
-            using (var command = new Device(deviceId))
+            using (IReceiveCommand command = new Device<IReceiveCommand>(deviceId))
             {
-                result = command.GetCommand(_timeout);
+                result = await command.GetCommandAsync(_timeout);
 
                 if (result.Equals("NotFound")) return NotFound();
 
@@ -50,13 +49,12 @@ namespace WebCommandDevice.Controllers
 
             json = JObject.Parse(request);
 
-            using (var sender = new RabbitSender(json.SelectToken("$..deviceId").Value<String>()))
+            using (ISenderCommand command = new Device<ISenderCommand>(json.SelectToken("$..deviceId").Value<String>()))
             {
-                sender.SendCommand(((JObject)json.SelectToken("$..command")).ToString());
+                command.SenderCommand(((JObject)json.SelectToken("$..command")).ToString());
             }
 
             return Ok();
         }
-
     }
 }

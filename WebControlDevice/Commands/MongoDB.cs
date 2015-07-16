@@ -23,15 +23,8 @@ namespace WebControlDevice.Commands
 
         public MongoDB()
         {
-            try
-            {
-                client = new MongoClient(Connection);
-                database = client.GetDatabase(Database);
-            }
-            catch (Exception ex)
-            {
-                // ignored
-            }
+            client = new MongoClient(Connection);
+            database = client.GetDatabase(Database);
         }
     }
 
@@ -39,21 +32,13 @@ namespace WebControlDevice.Commands
     {
         public async Task SaveCommandDeviceAsync(String deviceId, String jsonCommand)
         {
-            BsonBinaryData command;
             var collection = database.GetCollection<BsonDocument>(deviceId);
 
             using (var jsonReader = new JsonReader(jsonCommand))
             {
-                try
-                {
-                    var context = BsonDeserializationContext.CreateRoot(jsonReader);
-                    var document = collection.DocumentSerializer.Deserialize(context);
-                    await collection.InsertOneAsync(document);
-                }
-                catch (Exception ex)
-                {
-                    throw;
-                }
+                var context = BsonDeserializationContext.CreateRoot(jsonReader);
+                var document = collection.DocumentSerializer.Deserialize(context);
+                await collection.InsertOneAsync(document);
             }
         }
 

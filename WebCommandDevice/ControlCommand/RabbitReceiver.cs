@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using System.Web;
 using Newtonsoft.Json.Linq;
 using RabbitMQ.Client;
@@ -9,48 +10,10 @@ using RabbitMQ.Client.Events;
 
 namespace WebCommandDevice.ControlCommand
 {
-    internal abstract class Command : IDisposable
-    {
-        public abstract String Execute(TimeSpan timeout);
-        public abstract Int32 CountMessage();
-        public abstract void UnExecute();
-
-        public abstract void Dispose();
-    }
-
-    internal class DeviceCommand : Command
-    {
-        private readonly RabbitReceiner _rabbitReceiner;
-
-        public DeviceCommand(RabbitReceiner rabbitReceiner)
-        {
-            this._rabbitReceiner = rabbitReceiner;
-        }
-
-        public override Int32 CountMessage()
-        {
-            return _rabbitReceiner.QueueCount();
-        }
-
-        public override String Execute(TimeSpan timeout)
-        {
-            return _rabbitReceiner.SelectCommand(timeout);
-        }
-
-        public override void UnExecute()
-        {
-            _rabbitReceiner.DeliveryCommand();
-        }
-
-        public override void Dispose()
-        {
-            _rabbitReceiner.Dispose();
-        }
-    }
-
-    internal class RabbitReceiner : Rabbit
+    public class RabbitReceiner : RabbitBase
     {
         private ulong _deliveryTag;
+        private static StringBuilder _commandName = new StringBuilder();
 
         public RabbitReceiner(String deviceId)
         {
@@ -68,42 +31,53 @@ namespace WebCommandDevice.ControlCommand
             _channel.BasicConsume(_queueName, false, _consumer);
         }
 
-        public Int32 QueueCount()
+        public Int32 CountCommands()
         {
             return _consumer.Queue.Count();
         }
 
-        public String SelectCommand(TimeSpan timeout)
+        public String SelectCommand(TimeSpan? timeout = null)
         {
             JObject json = null;
             while (true)
             {
-                BasicDeliverEventArgs ea;
-                if (!_consumer.Queue.Dequeue((Int32)timeout.TotalMilliseconds, out ea)) return "NotFound";
+                BasicDeliverEventArgs ea = null;
+
+                if (timeout != null && !_consumer.Queue.Dequeue((Int32) timeout.Value.TotalMilliseconds, out ea))
+                    return "NotFound";
+                else
+                    ea = _consumer.Queue.Dequeue();
 
                 Byte[] body = null;
                 body = ea.Body;
                 var message = Encoding.UTF8.GetString(body);
-                
-                json = JObject.Parse(message);
-                String commandName = json.SelectToken("$.commandName").Value<String>();
 
-                if (!IsCommandExpire(commandName, ea.BasicProperties.Timestamp))
+                json = JObject.Parse(message);
+                _commandName.Append(json.SelectToken("$.commandName").Value<String>());
+
+                if (!IsCommandExpire(_commandName, ea.BasicProperties.Timestamp))
                 {
                     _channel.BasicAck(ea.DeliveryTag, false);
+                    _commandName.Clear();
                     continue;
                 }
-
                 _deliveryTag = ea.DeliveryTag;
+                _commandName.Clear();
                 break;
             }
             return json.ToString();
         }
 
-        private static Boolean IsCommandExpire(String command, AmqpTimestamp unixTimestamp)
+        public Task<String> SelectCommandAsync(TimeSpan timeout)
+        {
+            return new TaskFactory<String>().StartNew(() => SelectCommand(timeout),
+                TaskCreationOptions.LongRunning);
+        }
+
+        private static Boolean IsCommandExpire(StringBuilder command, AmqpTimestamp unixTimestamp)
         {
             Int64 timeout;
-            switch (command)
+            switch (command.ToString())
             {
                 case "delete":
                     timeout = (Int64)DeviceManager.CommandTime.Delete;
@@ -139,33 +113,32 @@ namespace WebCommandDevice.ControlCommand
             GC.SuppressFinalize(this);
         }
     }
-    
-    public class Device : IDisposable
+
+    public partial class Device<T>
     {
-        private readonly Command _command;
-
-        public Device(String deviceId)
-        {
-            _command = new DeviceCommand(new RabbitReceiner(deviceId));
-        }
-
-        public bool CheckCommand => _command.CountMessage() > 0;
-
-        public String GetCommand(TimeSpan timeout)
-        {
-            // if (CheckCommand) return String.Empty;
-            // var e = _command.CountMessage();
-            return _command.Execute(timeout);
-        }
-
         public void CleanCommand()
         {
-            _command?.UnExecute();
+            _receiner.DeliveryCommand();
         }
 
-        public void Dispose()
+        public Int32 CountCommand()
         {
-            _command.Dispose();
+            return _receiner.CountCommands();
+        }
+
+        public string GetCommand(TimeSpan timeSpan)
+        {
+            return _receiner.SelectCommand(timeSpan);
+        }
+
+        public Task<String> GetCommandAsync(TimeSpan timeSpan)
+        {
+            return _receiner.SelectCommandAsync(timeSpan);
+        }
+
+        public Boolean IsCommand()
+        {
+            return _receiner.CountCommands() > 0;
         }
     }
 }

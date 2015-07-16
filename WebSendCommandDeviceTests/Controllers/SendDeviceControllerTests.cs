@@ -4,12 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace RabbitSend
+namespace WebSendCommandDeviceTests.Controllers
 {
-    class Program
+    class SendDeviceControllerTests
     {
-        static void Main(string[] args)
-        {
-        }
     }
 }

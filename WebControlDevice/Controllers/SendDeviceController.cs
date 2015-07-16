@@ -13,66 +13,38 @@ namespace WebControlDevice.Controllers
     public class SendDeviceController : ApiController
     {
         [HttpGet]
-        [ActionName("Delete")]
-        public async Task<IHttpActionResult> GetCommandDelete(String deviceId)
-        {
-            var command = new JObject(
-                new JProperty("SendCommandDto",
-                new JObject(
-                    new JProperty("deviceId", deviceId),
-                    new JProperty("command",
-                    new JObject(
-                        new JProperty("commandName", "delete"),
-                        new JProperty("parameters",
-                        new JArray(
-                            new JObject(
-                                new JProperty("comma", "work")))))
-               ))));
-
-            var log = new Logging();
-            await log.SaveCommandDeviceAsync(deviceId, command.ToString());
-            return await SendCommand(command.ToString());
-        }
-
-        [HttpGet]
         [ActionName("GetInfo")]
         public async Task<IHttpActionResult> CommandGetInfo(String deviceId)
         {
+            var command = Commands.Commands.GetInfo(deviceId);
 
-            var command = new JObject(
-                new JProperty("SendCommandDto",
-                new JObject(
-                    new JProperty("deviceId", deviceId),
-                    new JProperty("command",
-                    new JObject(
-                        new JProperty("commandName", "getInfo"),
-                        new JProperty("parameters",
-                        new JArray(
-                            new JObject(
-                                new JProperty("comma", "work")))))
-                ))));
-
+            var log = new Logging();
+            try
+            {
+                await log.SaveCommandDeviceAsync(deviceId, command.ToString());
+            }
+            catch (Exception)
+            {
+                return InternalServerError();
+            }
             return await SendCommand(command.ToString());
         }
 
         [HttpGet]
         [ActionName("Upgrade")]
-        public async Task<IHttpActionResult> CommandUpgrade(String deviceId)
+        public async Task<IHttpActionResult> CommandUpgrade(String deviceId, String name, String value)
         {
-            var command = new JObject(
-                new JProperty("SendCommandDto",
-                new JObject(
-                    new JProperty("deviceId", deviceId),
-                    new JProperty("command",
-                    new JObject(
-                        new JProperty("commandName", "upgrade"),
-                        new JProperty("parameters",
-                        new JArray(
-                            new JObject(
-                                new JProperty("name", "url"),
-                                new JProperty("value", "goto")))))
-               ))));
+            var command = Commands.Commands.Upgrade(deviceId, name, value);
 
+            var log = new Logging();
+            try
+            {
+                await log.SaveCommandDeviceAsync(deviceId, command.ToString());
+            }
+            catch (Exception)
+            {
+                return InternalServerError();
+            }
             return await SendCommand(command.ToString());
         }
 
@@ -80,20 +52,36 @@ namespace WebControlDevice.Controllers
         [ActionName("setOnOff")]
         public async Task<IHttpActionResult> CommandSetOnOff(String deviceId, Boolean onOff)
         {
-            var command = new JObject(
-               new JProperty("SendCommandDto",
-               new JObject(
-                   new JProperty("deviceId", deviceId),
-                   new JProperty("command",
-                   new JObject(
-                       new JProperty("commandName", "setOnOff"),
-                       new JProperty("parameters",
-                       new JArray(
-                           new JObject(
-                               new JProperty("name", "url"),
-                               new JProperty("value", new JValue(onOff))))))
-              ))));
-            return await SendCommand(command.ToString());
+            var command = Commands.Commands.SetOnOff(deviceId, onOff);
+
+            var log = new Logging();
+            try
+            {
+                await log.SaveCommandDeviceAsync(deviceId, command);
+            }
+            catch (Exception ex)
+            {
+                return InternalServerError();
+            }
+            return await SendCommand(command);
+        }
+
+        [HttpGet]
+        [ActionName("Delete")]
+        public async Task<IHttpActionResult> GetCommandDelete(String deviceId)
+        {
+            var command = Commands.Commands.Delete(deviceId);
+
+            var log = new Logging();
+            try
+            {
+                await log.SaveCommandDeviceAsync(deviceId, command);
+            }
+            catch (Exception)
+            {
+                return InternalServerError();
+            }
+            return await SendCommand(command);
         }
 
         [HttpGet]
@@ -101,7 +89,16 @@ namespace WebControlDevice.Controllers
         public async Task<IHttpActionResult> HistoryDevice(String deviceId)
         {
             var log = new Logging();
-            var response = await log.CommandHistory(deviceId);
+            List<String> response = null;
+            try
+            {
+                response = await log.CommandHistory(deviceId);
+
+            }
+            catch (Exception)
+            {
+                return InternalServerError();
+            }
 
             return Ok(response);
         }
@@ -111,7 +108,7 @@ namespace WebControlDevice.Controllers
             try
             {
                 await Device.SendCommand(command);
-                return Ok();
+                return Ok("Команда отправлена успешно!");
             }
             catch (HttpRequestException ex)
             {
