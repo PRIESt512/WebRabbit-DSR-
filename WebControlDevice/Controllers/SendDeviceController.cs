@@ -111,7 +111,7 @@ namespace WebControlDevice.Controllers
         {
             try
             {
-                await SendCommand(command);
+                await Commands.SendCommand(command);
                 return Ok("Команда отправлена успешно!");
             }
             catch (HttpRequestException ex)
