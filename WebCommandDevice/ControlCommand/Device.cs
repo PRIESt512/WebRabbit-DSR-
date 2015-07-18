@@ -5,7 +5,7 @@ using System.Web;
 
 namespace WebCommandDevice.ControlCommand
 {
-    public partial class Device<T> : IReceiveCommand, ISenderCommand
+    public sealed partial class Device<T> : IReceiveCommand, ISenderCommand
     {
         private readonly RabbitReceiner _receiner;
         private readonly RabbitSender _sender;
