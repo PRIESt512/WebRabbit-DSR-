@@ -20,8 +20,8 @@ namespace WebCommandDevice.ControlCommand
 
         public void Dispose()
         {
-            _receiner?.Dispose();
-            _sender?.Dispose();
+            if (_receiner != null) _receiner.Dispose();
+            if (_sender != null) _sender.Dispose();
         }
     }
 }

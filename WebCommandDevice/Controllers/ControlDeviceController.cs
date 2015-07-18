@@ -18,7 +18,7 @@ namespace WebCommandDevice.Controllers
         {
             var _timeout = new TimeSpan(0, 0, 0, timeout);
             String result = String.Empty;
-            JObject response;
+            String response;
             using (IReceiveCommand command = new Device<IReceiveCommand>(deviceId))
             {
                 result = await command.GetCommandAsync(_timeout);
@@ -28,12 +28,8 @@ namespace WebCommandDevice.Controllers
                 if (DeviceManager.CollectionDeviceCommand.IsEmpty || DeviceManager.CollectionDeviceCommand[deviceId] == 255)
                     DeviceManager.CollectionDeviceCommand[deviceId] = 0;
                 DeviceManager.CollectionDeviceCommand[deviceId]++;
-                
-                response = new JObject(
-                    new JProperty("GetCommandResponseDto",
-                    new JObject(
-                        new JProperty("commandId", DeviceManager.CollectionDeviceCommand[deviceId]),
-                        new JProperty("command", result))));
+
+                response = Commands.GetResponse(result, DeviceManager.CollectionDeviceCommand[deviceId]);
 
                 command.CleanCommand();
             }
@@ -42,7 +38,7 @@ namespace WebCommandDevice.Controllers
 
         [HttpPost]
         [ActionName("commands")]
-        public async Task<IHttpActionResult> SendCommand()
+        public async Task<IHttpActionResult> SenderCommand()
         {
             JObject json = null;
             var request = await this.Request.Content.ReadAsStringAsync();

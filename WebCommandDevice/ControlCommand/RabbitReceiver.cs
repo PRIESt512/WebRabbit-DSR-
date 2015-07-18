@@ -18,8 +18,6 @@ namespace WebCommandDevice.ControlCommand
         public RabbitReceiner(String deviceId)
         {
             _deviceId = deviceId;
-
-            _factory = new ConnectionFactory() { HostName = _hostName };
             _connection = _factory.CreateConnection();
             _channel = _connection.CreateModel();
 
@@ -36,6 +34,11 @@ namespace WebCommandDevice.ControlCommand
             return _consumer.Queue.Count();
         }
 
+        /// <summary>
+        /// Проверка на наличие команд и выбор из очереди
+        /// </summary>
+        /// <param name="timeout">Необязательный параметр, без него доступ к очереди без ожидания</param>
+        /// <returns>"NotFound" если очередь пуста</returns>
         public String SelectCommand(TimeSpan? timeout = null)
         {
             JObject json = null;
@@ -66,7 +69,12 @@ namespace WebCommandDevice.ControlCommand
             return json.ToString();
         }
 
-        public Task<String> SelectCommandAsync(TimeSpan timeout)
+        /// <summary>
+        /// Асинхронный выбор команд
+        /// </summary>
+        /// <param name="timeout"></param>
+        /// <returns></returns>
+        public Task<String> SelectCommandAsync(TimeSpan? timeout = null)
         {
             return new TaskFactory<String>().StartNew(() => SelectCommand(timeout),
                 TaskCreationOptions.LongRunning);
@@ -96,8 +104,14 @@ namespace WebCommandDevice.ControlCommand
             return (NowUnixTime - unixTimestamp.UnixTime) <= timeout;
         }
 
-        private static Int64 NowUnixTime => (Int64)(DateTime.UtcNow - new DateTime(1970, 1, 1)).TotalSeconds;
+        private static Int64 NowUnixTime
+        {
+            get { return (Int64) (DateTime.UtcNow - new DateTime(1970, 1, 1)).TotalSeconds; }
+        }
 
+        /// <summary>
+        /// Удаление команды из очереди
+        /// </summary>
         public void DeliveryCommand()
         {
             _channel.BasicAck(_deliveryTag, false);

@@ -6,12 +6,21 @@ using System.Web;
 
 namespace WebCommandDevice.ControlCommand
 {
+    /// <summary>
+    /// Класс управления командами для всех девайсов
+    /// </summary>
     public static class DeviceManager
     {
         private static ConcurrentDictionary<String, Byte> _collectionDeviceCommand = new ConcurrentDictionary<String, Byte>();
 
-        public static ConcurrentDictionary<String, Byte> CollectionDeviceCommand => _collectionDeviceCommand;
+        public static ConcurrentDictionary<String, Byte> CollectionDeviceCommand
+        {
+            get { return _collectionDeviceCommand; }
+        }
 
+        /// <summary>
+        /// Таймаут конкретной команды
+        /// </summary>
         public enum CommandTime
         {
             Delete = 15,

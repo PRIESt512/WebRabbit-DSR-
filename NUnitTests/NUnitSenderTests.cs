@@ -14,8 +14,6 @@ namespace NUnitTests
         public SenderTest()
         {
             _deviceId = "300";
-
-            _factory = new ConnectionFactory() { HostName = _hostName };
             _connection = _factory.CreateConnection();
             _channel = _connection.CreateModel();
 

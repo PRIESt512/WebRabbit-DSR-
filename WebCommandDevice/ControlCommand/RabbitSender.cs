@@ -13,8 +13,6 @@ namespace WebCommandDevice.ControlCommand
         public RabbitSender(String deviceId)
         {
             _deviceId = deviceId;
-
-            _factory = new ConnectionFactory() { HostName = _hostName };
             _connection = _factory.CreateConnection();
             _channel = _connection.CreateModel();
 
@@ -25,6 +23,10 @@ namespace WebCommandDevice.ControlCommand
             _channel.QueueBind(_queueName, _exchange, _deviceId);
         }
 
+        /// <summary>
+        /// Отправка команды в очередь, где команда будет ожидать отправления на клиентское устройство
+        /// </summary>
+        /// <param name="command">Команда конкретному устройству</param>
         public void SendCommand(String command)
         {
             var body = Encoding.UTF8.GetBytes(command);

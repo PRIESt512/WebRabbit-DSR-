@@ -15,7 +15,7 @@ namespace WebControlDevice.Controllers
         [ActionName("GetInfo")]
         public async Task<IHttpActionResult> CommandGetInfo(String deviceId)
         {
-            var command = Commands.GetInfo(deviceId);
+            var command = ControlDevice.GetInfo(deviceId);
 
             var log = new Logging();
             try
@@ -26,6 +26,7 @@ namespace WebControlDevice.Controllers
             {
                 return InternalServerError();
             }
+
             return await SendCommand(command);
         }
 
@@ -33,7 +34,7 @@ namespace WebControlDevice.Controllers
         [ActionName("Upgrade")]
         public async Task<IHttpActionResult> CommandUpgrade(String deviceId, String name, String value)
         {
-            var command = Commands.Upgrade(deviceId, name, value);
+            var command = ControlDevice.Upgrade(deviceId, name, value);
 
             var log = new Logging();
             try
@@ -51,7 +52,7 @@ namespace WebControlDevice.Controllers
         [ActionName("setOnOff")]
         public async Task<IHttpActionResult> CommandSetOnOff(String deviceId, Boolean onOff)
         {
-            var command = Commands.SetOnOff(deviceId, onOff);
+            var command = ControlDevice.SetOnOff(deviceId, onOff);
 
             var log = new Logging();
             try
@@ -69,7 +70,7 @@ namespace WebControlDevice.Controllers
         [ActionName("Delete")]
         public async Task<IHttpActionResult> CommandDelete(String deviceId)
         {
-            var command = Commands.Delete(deviceId);
+            var command = ControlDevice.Delete(deviceId);
 
             var log = new Logging();
             try
@@ -92,7 +93,6 @@ namespace WebControlDevice.Controllers
             try
             {
                 response = await log.GetHistoryCommandAsync(deviceId);
-
             }
             catch (Exception)
             {
@@ -111,12 +111,12 @@ namespace WebControlDevice.Controllers
         {
             try
             {
-                await Commands.SendCommand(command);
+                await ControlDevice.SendCommand(command);
                 return Ok("Команда отправлена успешно!");
             }
             catch (HttpRequestException ex)
             {
-                return BadRequest(ex.InnerException != null ? $"{ex.InnerException.Message}. {ex.InnerException.InnerException.Message}" : $"{ex.Message}");
+                return BadRequest(ex.InnerException != null ? String.Format("{0} {1}", ex.InnerException.Message, ex.InnerException.InnerException.Message) : ex.Message);
             }
         }
     }
