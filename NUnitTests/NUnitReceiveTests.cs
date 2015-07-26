@@ -5,7 +5,8 @@ using Newtonsoft.Json.Linq;
 using NUnit.Framework;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
-using WebCommandDevice.ControlCommand;
+using WebCommandDevice.ControlDevice.RabbitMQ;
+
 
 namespace NUnitTests
 {

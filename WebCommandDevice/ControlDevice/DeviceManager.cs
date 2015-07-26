@@ -1,10 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
-using System.Web;
 
-namespace WebCommandDevice.ControlCommand
+namespace WebCommandDevice.ControlDevice
 {
     /// <summary>
     /// Класс управления командами для всех девайсов
@@ -16,17 +13,6 @@ namespace WebCommandDevice.ControlCommand
         public static ConcurrentDictionary<String, Byte> CollectionDeviceCommand
         {
             get { return _collectionDeviceCommand; }
-        }
-
-        /// <summary>
-        /// Таймаут конкретной команды
-        /// </summary>
-        public enum CommandTime
-        {
-            Delete = 15,
-            GetInfo = 30,
-            Upgrade = 30,
-            SetOnOff = 20
         }
     }
 }

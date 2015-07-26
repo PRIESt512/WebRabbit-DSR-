@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Web.Http;
+﻿using System.Web.Http;
+using WebCommandDevice.ControlDevice.Pool;
 
 namespace WebCommandDevice
 {
@@ -10,15 +8,16 @@ namespace WebCommandDevice
         public static void Register(HttpConfiguration config)
         {
             // Конфигурация и службы веб-API
+            PoolConnection.InitializationPool(1);
 
             // Маршруты веб-API
             config.MapHttpAttributeRoutes();
 
-            config.Routes.MapHttpRoute(
-                 name: "DeviceCommandApi",
-                 routeTemplate: "api/{action}",
-                 defaults: new { controller = "ControlDevice", id = RouteParameter.Optional }
+            config.Routes.MapHttpRoute("DeviceCommandApi", "api/{action}", new { controller = "ControlDevice", id = RouteParameter.Optional }
              );
+
+            config.Routes.MapHttpRoute("DeviceControlApi", "api/{action}", new { controller = "SendDevice", id = RouteParameter.Optional }
+                        );
 
             config.Formatters.Remove(config.Formatters.XmlFormatter);
         }

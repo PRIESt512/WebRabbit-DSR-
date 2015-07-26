@@ -14,14 +14,14 @@ namespace WebControlDevice.Command
     public static class ControlDevice
     {
         #region Классы для Сериализации
-        private class Command
+        public class Command
         {
             public String commandName;
 
             public Dictionary<String, Object> parameters;
         }
 
-        private class Device
+        public class Device
         {
             public String deviceId;
 

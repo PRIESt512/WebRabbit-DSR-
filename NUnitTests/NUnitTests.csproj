@@ -69,10 +69,6 @@
       <Project>{a8bfe6f9-1802-4d49-9d23-3b889c6f19ae}</Project>
       <Name>WebControlDevice</Name>
     </ProjectReference>
-    <ProjectReference Include="..\WebControlDevice\WebSendCommandDevice.csproj">
-      <Project>{7fcd73ac-6533-4534-8f5e-2379d028bcef}</Project>
-      <Name>WebSendCommandDevice</Name>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

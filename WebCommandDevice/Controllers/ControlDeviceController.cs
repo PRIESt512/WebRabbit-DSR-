@@ -1,12 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Net.Http;
 using System.Threading.Tasks;
 using System.Web.Http;
 using Newtonsoft.Json.Linq;
-using WebCommandDevice.ControlCommand;
+using WebCommandDevice.ControlDevice;
+using WebCommandDevice.ControlDevice.Pool;
+using WebCommandDevice.ControlDevice.RabbitMQ;
 
 namespace WebCommandDevice.Controllers
 {
@@ -18,7 +16,7 @@ namespace WebCommandDevice.Controllers
         {
             var _timeout = new TimeSpan(0, 0, 0, timeout);
             String result = String.Empty;
-            String response;
+            JObject response = new JObject();
             using (IReceiveCommand command = new Device<IReceiveCommand>(deviceId))
             {
                 result = await command.GetCommandAsync(_timeout);
@@ -29,23 +27,26 @@ namespace WebCommandDevice.Controllers
                     DeviceManager.CollectionDeviceCommand[deviceId] = 0;
                 DeviceManager.CollectionDeviceCommand[deviceId]++;
 
-                response = Commands.GetResponse(result, DeviceManager.CollectionDeviceCommand[deviceId]);
+                response.Add("commandId", DeviceManager.CollectionDeviceCommand[deviceId]);
+                response.Add("command", result);
 
+                var log = PoolConnection.LogPool.GetObject(deviceId);
+                await log.SaveHistoryCommandAsync(response.ToString());
                 command.CleanCommand();
             }
             return Ok(response);
         }
-
+        
         [HttpPost]
         [ActionName("commands")]
         public async Task<IHttpActionResult> SenderCommand()
         {
             JObject json = null;
-            var request = await this.Request.Content.ReadAsStringAsync();
+            var body = await Request.Content.ReadAsStringAsync();
+            json = JObject.Parse(body);
+            var request = json.SelectToken("$.deviceId").Value<String>();
 
-            json = JObject.Parse(request);
-
-            using (ISenderCommand command = new Device<ISenderCommand>(json.SelectToken("$..deviceId").Value<String>()))
+            using (ISenderCommand command = new Device<ISenderCommand>(request))
             {
                 command.SenderCommand(((JObject)json.SelectToken("$..command")).ToString());
             }

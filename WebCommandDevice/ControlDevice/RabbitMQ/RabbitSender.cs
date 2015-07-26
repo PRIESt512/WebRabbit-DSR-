@@ -1,26 +1,28 @@
 using System;
-using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Newtonsoft.Json.Linq;
 using RabbitMQ.Client;
-using RabbitMQ.Util;
 
-namespace WebCommandDevice.ControlCommand
+namespace WebCommandDevice.ControlDevice.RabbitMQ
 {
-    public class RabbitSender : RabbitBase
+    public sealed class RabbitSender : RabbitBase
     {
-        public RabbitSender(String deviceId)
+        public override void InstallationState(String deviceId)
         {
-            _deviceId = deviceId;
-            _connection = _factory.CreateConnection();
-            _channel = _connection.CreateModel();
+            if (_channel != null) return;
 
+            _deviceId = deviceId;
+            _channel = _connection.CreateModel();
             _channel.ExchangeDeclare(_exchange, "direct");
             _queueName = deviceId;
 
             _channel.QueueDeclare(_queueName, false, false, false, null);
             _channel.QueueBind(_queueName, _exchange, _deviceId);
+        }
+
+        public override void ResetState()
+        {
+            _channel.Close();
         }
 
         /// <summary>
@@ -46,11 +48,9 @@ namespace WebCommandDevice.ControlCommand
         protected override void Dispose(Boolean flag)
         {
             if (!flag) return;
-            _connection.Close();
             _channel.Close();
             GC.SuppressFinalize(this);
         }
-
     }
 
     public partial class Device<T>
