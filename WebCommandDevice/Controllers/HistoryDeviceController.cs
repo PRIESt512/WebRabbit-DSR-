@@ -12,7 +12,7 @@ namespace WebCommandDevice.Controllers
         [ActionName("history")]
         public async Task<IHttpActionResult> HistoryDevice(String deviceId)
         {
-            var log = PoolConnection.LogPool.GetObject(deviceId);
+            var log = PoolConnection.LogPool.GetInstance(deviceId);
             List<String> response = null;
             try
             {
@@ -22,7 +22,7 @@ namespace WebCommandDevice.Controllers
             {
                 return InternalServerError();
             }
-            PoolConnection.LogPool.ReturnObject(ref log);
+            PoolConnection.LogPool.ReturnToPool(ref log);
             return Ok(response);
         }
     }

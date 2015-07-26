@@ -18,7 +18,7 @@ namespace WebCommandDevice.ControlDevice.Pool
         T Create();
     }
 
-    public class ObjectCreator<T> : IPoolObjectCreator<T> where T : class, new()
+    public class PoolableObjectBase<T> : IPoolObjectCreator<T> where T : class, new()
     {
         T IPoolObjectCreator<T>.Create()
         {
@@ -26,13 +26,13 @@ namespace WebCommandDevice.ControlDevice.Pool
         }
     }
 
-    public class ObjectPool<T> : IDisposable where T : class, IPoolable, IDisposable
+    public class Pool<T> : IDisposable where T : class, IPoolable, IDisposable
     {
         /// <summary>Object container. ConcurrentBag is tread-safe class.</summary>
         private readonly ConcurrentBag<T> _pool = new ConcurrentBag<T>();
 
         private readonly Int32 _maxCount;
-        private readonly Int32 _minCount;   
+        private readonly Int32 _minCount;
 
         /// <summary>Object creator interface.</summary>
         private readonly IPoolObjectCreator<T> _objectCreator;
@@ -40,7 +40,8 @@ namespace WebCommandDevice.ControlDevice.Pool
         /// <summary>Total instances.</summary>
         public int Count { get { return _pool.Count; } }
 
-        public ObjectPool(IPoolObjectCreator<T> creator)
+        #region Конструкторы
+        public Pool(IPoolObjectCreator<T> creator)
         {
             if (creator == null)
                 throw new ArgumentNullException("creator can't be null");
@@ -50,27 +51,29 @@ namespace WebCommandDevice.ControlDevice.Pool
             _minCount = 0;
         }
 
-        public ObjectPool(IPoolObjectCreator<T> creator, Int32 minCount) : this(creator)
+        public Pool(IPoolObjectCreator<T> creator, Int32 minCount) : this(creator)
         {
             _minCount = minCount;
             for (int i = 0; i < minCount; i++)
             {
                 var obj = _objectCreator.Create();
-                
+
                 _pool.Add(obj);
             }
         }
 
-        public ObjectPool(IPoolObjectCreator<T> creator, Int32 minCount, Int32 maxCount) : this(creator, minCount)
+        public Pool(IPoolObjectCreator<T> creator, Int32 minCount, Int32 maxCount) : this(creator, minCount)
         {
             if (minCount > maxCount)
                 throw new ArgumentException("minCount more maxCount");
 
             _maxCount = maxCount;
         }
+        #endregion
+
         /// <summary>Gets an object from the pool.</summary>
         /// <returns>An object.</returns>
-        public T GetObject(String deviceId)
+        public T GetInstance(String deviceId)
         {
             T obj;
             if (_pool.TryTake(out obj))
@@ -86,8 +89,7 @@ namespace WebCommandDevice.ControlDevice.Pool
 
         /// <summary>Returns the specified object to the pool.</summary>
         /// <param name="obj">The object to return.</param>
-        public
-        void ReturnObject(ref T obj)
+        public void ReturnToPool(ref T obj)
         {
             obj.ResetState();
             _pool.Add(obj);
