@@ -23,7 +23,8 @@ namespace WebCommandDevice.Controllers
                 return InternalServerError();
             }
             PoolConnection.LogPool.ReturnToPool(ref log);
-            return Ok(response);
+
+            return Json(response);
         }
     }
 }

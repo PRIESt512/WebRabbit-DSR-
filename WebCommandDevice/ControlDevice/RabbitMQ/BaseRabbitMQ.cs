@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Configuration;
 using System.Threading.Tasks;
 using RabbitMQ.Client;
+using WebCommandDevice.ControlDevice.Comet;
 using WebCommandDevice.ControlDevice.Pool;
 
 namespace WebCommandDevice.ControlDevice.RabbitMQ
@@ -8,8 +10,7 @@ namespace WebCommandDevice.ControlDevice.RabbitMQ
     public interface IReceiveCommand : IDisposable
     {
         Boolean IsCommand();
-        String GetCommand(TimeSpan? timeSpan);
-        Task<String> GetCommandAsync(TimeSpan? timeSpan);
+        void GetCommand(TimeSpan? timeSpan, out Command commandBody);   
         Int32 CountCommand();
         void CleanCommand();
     }
@@ -24,15 +25,15 @@ namespace WebCommandDevice.ControlDevice.RabbitMQ
     {
         protected static readonly ConnectionFactory _factory = new ConnectionFactory
         {
-            UserName = "admin",
-            Password = "mistral",
-            HostName = "localhost",
-            VirtualHost = "device"
+            UserName = ConfigurationManager.AppSettings.Get("username"),
+            Password = ConfigurationManager.AppSettings.Get("password"),
+            HostName = ConfigurationManager.AppSettings.Get("host"),
+            VirtualHost = ConfigurationManager.AppSettings.Get("virtualhost"),
+            Port = Convert.ToInt32(ConfigurationManager.AppSettings.Get("port"))
         };
-
+       
         protected static IConnection _connection = _factory.CreateConnection();
         protected IModel _channel;
-        protected QueueingBasicConsumer _consumer;
 
         protected static readonly String _exchange = "commands";
         protected String _deviceId;

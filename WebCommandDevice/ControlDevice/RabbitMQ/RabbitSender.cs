@@ -9,20 +9,17 @@ namespace WebCommandDevice.ControlDevice.RabbitMQ
     {
         public override void InstallationState(String deviceId)
         {
-            if (_channel != null) return;
-
-            _deviceId = deviceId;
-            _channel = _connection.CreateModel();
-            _channel.ExchangeDeclare(_exchange, "direct");
-            _queueName = deviceId;
-
-            _channel.QueueDeclare(_queueName, false, false, false, null);
-            _channel.QueueBind(_queueName, _exchange, _deviceId);
+            this._queueName = this._deviceId = deviceId;
+            this._channel = _connection.CreateModel();
+            this._channel.ExchangeDeclare(_exchange, "direct");
+            this._channel.QueueDeclare(this._queueName, false, false, false, null);
+            this._channel.QueueBind(this._queueName, _exchange, this._deviceId);
         }
 
         public override void ResetState()
         {
-            _channel.Close();
+            //this._channel.QueueUnbind(this._queueName, _exchange, this._deviceId, null);
+            this._channel.Close();
         }
 
         /// <summary>
@@ -33,22 +30,22 @@ namespace WebCommandDevice.ControlDevice.RabbitMQ
         {
             var body = Encoding.UTF8.GetBytes(command);
 
-            var properties = _channel.CreateBasicProperties();
+            var properties = this._channel.CreateBasicProperties();
             properties.DeliveryMode = 2;
 
             AmqpTimestamp unixTime = new AmqpTimestamp((Int64)(DateTime.UtcNow - new DateTime(1970, 1, 1)).TotalSeconds);
             properties.Timestamp = unixTime;
-            _channel.BasicPublish(_exchange, _deviceId, properties, body);
+            this._channel.BasicPublish(_exchange, this._deviceId, properties, body);
         }
 
         public Task SendCommandAsync(String command)
         {
-            return Task.Run(() => SendCommand(command));
+            return Task.Run(() => this.SendCommand(command));
         }
         protected override void Dispose(Boolean flag)
         {
             if (!flag) return;
-            _channel.Close();
+            this._channel.Close();
             GC.SuppressFinalize(this);
         }
     }
@@ -57,12 +54,12 @@ namespace WebCommandDevice.ControlDevice.RabbitMQ
     {
         public void SenderCommand(String command)
         {
-            _sender.SendCommand(command);
+            this._sender.SendCommand(command);
         }
 
         public Task SenderCommandAsync(String command)
         {
-            return _sender.SendCommandAsync(command);
+            return this._sender.SendCommandAsync(command);
         }
     }
 }

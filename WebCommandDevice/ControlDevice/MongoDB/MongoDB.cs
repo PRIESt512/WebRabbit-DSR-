@@ -21,10 +21,12 @@ namespace WebCommandDevice.ControlDevice.MongoDB
 
         static MongoDb()
         {
-            Connection = ConfigurationManager.ConnectionStrings["MongoDB"].ConnectionString;
+            Connection = String.Format("{0}:{1}", ConfigurationManager.ConnectionStrings["MongoDB"].ConnectionString, 
+                ConfigurationManager.AppSettings.Get("MongoDbPort"));
             Database = ConfigurationManager.AppSettings.Get("Database");
 
             _client = new MongoClient(Connection);
+
             _database = _client.GetDatabase(Database);
         }
 
@@ -37,7 +39,7 @@ namespace WebCommandDevice.ControlDevice.MongoDB
         public void Dispose() { }
     }
 
-    public sealed class Logging : MongoDb, IPoolable
+    public sealed class Logging : MongoDb
     {
         private IMongoCollection<BsonDocument> _collection;
         /// <summary>
@@ -51,7 +53,7 @@ namespace WebCommandDevice.ControlDevice.MongoDB
             {
                 var context = BsonDeserializationContext.CreateRoot(jsonReader);
                 var document = _collection.DocumentSerializer.Deserialize(context);
-                await _collection.InsertOneAsync(document);
+                await this._collection.InsertOneAsync(document);
             }
         }
 
@@ -63,7 +65,7 @@ namespace WebCommandDevice.ControlDevice.MongoDB
         {
             var listCommand = new List<String>();
 
-            await _collection.Find(new BsonDocument())
+            await this._collection.Find(new BsonDocument())
                 .ForEachAsync(document =>
                 {
                     using (var stringWriter = new StringWriter())
@@ -80,12 +82,20 @@ namespace WebCommandDevice.ControlDevice.MongoDB
 
         public override void InstallationState(String deviceId)
         {
-            _collection = _database.GetCollection<BsonDocument>(deviceId);
+            try
+            {
+                this._collection = _database.GetCollection<BsonDocument>(deviceId);
+            }
+            catch (Exception ex)
+            {
+
+                throw;
+            }
         }
 
         public override void ResetState()
         {
-            _collection = null;
+            this._collection = null;
         }
     }
 }

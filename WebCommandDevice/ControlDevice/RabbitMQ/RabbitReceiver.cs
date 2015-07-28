@@ -1,34 +1,71 @@
 ﻿using System;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
+using WebCommandDevice.ControlDevice.Comet;
 
 namespace WebCommandDevice.ControlDevice.RabbitMQ
 {
+    [Serializable()]
+    public class NotFoundQueue : Exception
+    {
+        public NotFoundQueue() : base() { }
+        public NotFoundQueue(String message) : base(message) { }
+        public NotFoundQueue(String message, System.Exception inner) : base(message, inner) { }
+
+        protected NotFoundQueue(System.Runtime.Serialization.SerializationInfo info,
+       System.Runtime.Serialization.StreamingContext context)
+        { }
+    }
+
     public sealed class RabbitReceiner : RabbitBase
     {
-        BasicDeliverEventArgs _ea;
+        private BasicDeliverEventArgs _ea;
+        private QueueingBasicConsumer _consumer;
 
         public override void InstallationState(String deviceId)
         {
-            _deviceId = deviceId;
+            try
+            {
+                #region не удачный вариант
+                //if (this._channel != null)
+                //{
+                //    this._channel.QueueBind(_queueName, _exchange, _deviceId);
+                //    this._consumer = new QueueingBasicConsumer(_channel);
+                //    this._channel.BasicConsume(_queueName, false, _consumer);
+                //}
+                //else
+                //{
+                //    this._queueName = _deviceId = deviceId;
+                //    this._channel = _connection.CreateModel();
+                //    this._channel.ExchangeDeclare(_exchange, "direct");
 
-            _channel = _connection.CreateModel();
+                //    this._channel.QueueBind(_queueName, _exchange, _deviceId);
+                //    this._consumer = new QueueingBasicConsumer(_channel);
+                //    this._channel.BasicConsume(_queueName, false, _consumer);
+                //}
+                    #endregion
+                this._queueName = _deviceId = deviceId;
+                this._channel = _connection.CreateModel();
+                this._channel.ExchangeDeclare(_exchange, "direct");
 
-            _channel.ExchangeDeclare(_exchange, "direct");
-            _queueName = _deviceId;
-            _channel.QueueBind(_queueName, _exchange, _deviceId);
-
-            _consumer = new QueueingBasicConsumer(_channel);
-
-            _channel.BasicConsume(_queueName, false, _consumer);
+                this._channel.QueueBind(_queueName, _exchange, _deviceId);
+                this._consumer = new QueueingBasicConsumer(_channel);
+                this._channel.BasicConsume(_queueName, false, _consumer);
+            }
+            catch (Exception ex)
+            {
+                throw new NotFoundQueue(String.Format("Queue {0} Not Found", _queueName));
+            }
         }
 
         public override void ResetState()
         {
+            //_channel.BasicCancel(_consumer.ConsumerTag);
+            //_consumer.OnCancel();
+            //_channel.QueueUnbind(_queueName, _exchange, _deviceId, null);
             _channel.Close();
         }
 
@@ -87,7 +124,7 @@ namespace WebCommandDevice.ControlDevice.RabbitMQ
         {
             return _receiner.CountCommands();
         }
-
+        
         /// <summary>
         /// Получение команды из очереди, в случае отсутствия режим ожидания, 
         /// приводит к блокированию вызывающего потока
@@ -95,51 +132,55 @@ namespace WebCommandDevice.ControlDevice.RabbitMQ
         /// <param name="timeSpan">Наличие параметра приводит к временному ожидания команды, 
         /// в противном случае бесконечное ожидание</param>
         /// <returns>Текст команды</returns>
-        public String GetCommand(TimeSpan? timeSpan)
+        public void GetCommand(TimeSpan? timeSpan, out Command command)
         {
-            String message;
             Byte[] body;
             AmqpTimestamp timestamp;
-
+            String message;
             while (true)
             {
-                if (!_receiner.SelectCommand(out body, out timestamp)) return "NotFound";
+                if (!_receiner.SelectCommand(out body, out timestamp, timeSpan))
+                {
+                    command = new Command(false);
+                    return;
+                }
                 message = Encoding.UTF8.GetString(body);
 
                 var json = JObject.Parse(message);
                 _commandName.Append(json.SelectToken("$.commandName").Value<String>());
-
+               
                 if (!IsCommandExpire(_commandName, timestamp))
                 {
                     _receiner.DeliveryCommand();
                     _commandName.Clear();
+                    timestamp = new AmqpTimestamp(timestamp.UnixTime / 2);
                     continue;
                 }
                 _commandName.Clear();
                 break;
             }
-            return message;
+            command = new Command(message);
         }
 
         private Boolean IsCommandExpire(StringBuilder command, AmqpTimestamp unixTimestamp)
         {
             Int64 timeout;
-            switch (command.ToString())
+            switch (command.ToString().ToLower())
             {
                 case "delete":
                     timeout = (Int64)CommandTime.Delete;
                     break;
-                case "getInfo":
+                case "getinfo":
                     timeout = (Int64)CommandTime.GetInfo;
                     break;
                 case "upgrade":
                     timeout = (Int64)CommandTime.Upgrade;
                     break;
-                case "setOnOff":
+                case "setonoff":
                     timeout = (Int64)CommandTime.SetOnOff;
                     break;
                 default:
-                    timeout = 10000;
+                    timeout = 1000;
                     break;
             }
             return (NowUnixTime - unixTimestamp.UnixTime) <= timeout;
@@ -147,7 +188,7 @@ namespace WebCommandDevice.ControlDevice.RabbitMQ
 
         private Int64 NowUnixTime
         {
-            get { return (Int64)(DateTime.UtcNow - new DateTime(1970, 1, 1)).TotalSeconds; }
+            get { return ((Int64)(DateTime.UtcNow - new DateTime(1970, 1, 1)).TotalSeconds); }
         }
 
         /// <summary>
@@ -157,11 +198,11 @@ namespace WebCommandDevice.ControlDevice.RabbitMQ
         /// <param name="timeSpan">Наличие параметра приводит к временному ожидания команды, 
         /// в противном случае бесконечное ожидание</param>
         /// <returns>Текст команды</returns>
-        public Task<String> GetCommandAsync(TimeSpan? timeSpan)
-        {
-            return new TaskFactory().StartNew(() => GetCommand(timeSpan),
-                TaskCreationOptions.LongRunning);
-        }
+        //public Task<String> GetCommandAsync(TimeSpan? timeSpan)
+        //{
+        //    return new TaskFactory().StartNew(() => GetCommand(timeSpan),
+        //        TaskCreationOptions.LongRunning);
+        //}
 
         public Boolean IsCommand()
         {
@@ -174,9 +215,9 @@ namespace WebCommandDevice.ControlDevice.RabbitMQ
         public enum CommandTime
         {
             Delete = 15,
-            GetInfo = 30,
+            GetInfo = 5,
             Upgrade = 30,
-            SetOnOff = 20
+            SetOnOff = 10
         }
     }
 }
