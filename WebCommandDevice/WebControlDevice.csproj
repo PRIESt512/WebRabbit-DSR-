@@ -193,7 +193,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="App_Start\WebApiConfig.cs" />
-    <Compile Include="ControlDevice\Comet.cs" />
     <Compile Include="ControlDevice\Comet\Client.cs" />
     <Compile Include="ControlDevice\Comet\Command.cs" />
     <Compile Include="ControlDevice\MongoDB\MongoDB.cs" />
