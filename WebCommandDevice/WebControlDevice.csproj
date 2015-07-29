@@ -203,9 +203,7 @@
     <Compile Include="ControlDevice\Pool\PoolConnection.cs" />
     <Compile Include="ControlDevice\RabbitMQ\RabbitReceiver.cs" />
     <Compile Include="ControlDevice\RabbitMQ\RabbitSender.cs" />
-    <Compile Include="..\..\..\..\ControlDeviceController.cs">
-      <Link>Controllers\ControlDeviceController.cs</Link>
-    </Compile>
+    <Compile Include="Controllers\ControlDeviceController.cs" />
     <Compile Include="Controllers\HistoryDeviceController.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
