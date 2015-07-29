@@ -1,9 +1,8 @@
-﻿using System;
+using System;
 using System.Threading.Tasks;
 using System.Web.Http;
 using Newtonsoft.Json.Linq;
-using WebCommandDevice.ControlDevice;
-using WebCommandDevice.ControlDevice.Pool;
+using WebCommandDevice.ControlDevice.Comet;
 using WebCommandDevice.ControlDevice.RabbitMQ;
 
 namespace WebCommandDevice.Controllers
@@ -12,45 +11,22 @@ namespace WebCommandDevice.Controllers
     {
         [HttpGet]
         [ActionName("commands")]
-        public async Task<IHttpActionResult> CheckCommand(String deviceId, Int32 timeout)
+        public IHttpActionResult CheckCommand(String deviceId, Int32 timeout)
         {
-            var _timeout = new TimeSpan(0, 0, 0, timeout);
-            String result = String.Empty;
-            JObject response = new JObject();
-            using (IReceiveCommand command = new Device<IReceiveCommand>(deviceId))
-            {
-                result = await command.GetCommandAsync(_timeout);
-
-                if (result.Equals("NotFound")) return NotFound();
-
-                if (DeviceManager.CollectionDeviceCommand.IsEmpty || DeviceManager.CollectionDeviceCommand[deviceId] == 255)
-                    DeviceManager.CollectionDeviceCommand[deviceId] = 0;
-                DeviceManager.CollectionDeviceCommand[deviceId]++;
-
-                response.Add("commandId", DeviceManager.CollectionDeviceCommand[deviceId]);
-                response.Add("command", result);
-
-                var log = PoolConnection.LogPool.GetObject(deviceId);
-                await log.SaveHistoryCommandAsync(response.ToString());
-                command.CleanCommand();
-            }
-            return Ok(response);
+            Client client = new Client(deviceId, timeout, Request);
+            return client;
         }
-        
+
         [HttpPost]
         [ActionName("commands")]
-        public async Task<IHttpActionResult> SenderCommand()
-        {
-            JObject json = null;
-            var body = await Request.Content.ReadAsStringAsync();
-            json = JObject.Parse(body);
-            var request = json.SelectToken("$.deviceId").Value<String>();
-
-            using (ISenderCommand command = new Device<ISenderCommand>(request))
+        public async Task<IHttpActionResult> SenderCommand()    
+        {   
+            var jo = JObject.Parse(await this.Request.Content.ReadAsStringAsync());
+            var id = jo.SelectToken("$.deviceId").Value<String>();
+            using (ISenderCommand command = new Device<ISenderCommand>(id))
             {
-                command.SenderCommand(((JObject)json.SelectToken("$..command")).ToString());
+                command.SenderCommand(((JObject)jo.SelectToken("$..command")).ToString());
             }
-
             return Ok();
         }
     }
