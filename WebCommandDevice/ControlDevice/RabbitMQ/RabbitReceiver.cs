@@ -153,7 +153,6 @@ namespace WebCommandDevice.ControlDevice.RabbitMQ
                 {
                     _receiner.DeliveryCommand();
                     _commandName.Clear();
-                    timestamp = new AmqpTimestamp(timestamp.UnixTime / 2);
                     continue;
                 }
                 _commandName.Clear();
