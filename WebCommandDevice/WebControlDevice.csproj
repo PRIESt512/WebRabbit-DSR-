@@ -207,7 +207,6 @@
       <Link>Controllers\ControlDeviceController.cs</Link>
     </Compile>
     <Compile Include="Controllers\HistoryDeviceController.cs" />
-    <Compile Include="Controllers\SimpleDeviceController.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
