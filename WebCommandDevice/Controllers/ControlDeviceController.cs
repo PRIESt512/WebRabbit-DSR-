@@ -1,10 +1,9 @@
-﻿using System;
+using System;
 using System.Threading.Tasks;
 using System.Web.Http;
 using Newtonsoft.Json.Linq;
 using WebCommandDevice.ControlDevice.Comet;
 using WebCommandDevice.ControlDevice.RabbitMQ;
-
 
 namespace WebCommandDevice.Controllers
 {
@@ -17,7 +16,7 @@ namespace WebCommandDevice.Controllers
             Client client = new Client(deviceId, timeout, Request);
             return client;
         }
-
+        
         [HttpPost]
         [ActionName("commands")]
         public async Task<IHttpActionResult> SenderCommand()
