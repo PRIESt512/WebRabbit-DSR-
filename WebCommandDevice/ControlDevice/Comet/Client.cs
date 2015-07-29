@@ -86,6 +86,7 @@ namespace WebCommandDevice.ControlDevice.Comet
 
                     var log = PoolConnection.LogPool.GetInstance(_deviceId);
                     await log.SaveHistoryCommandAsync(body.ToString());
+                    PoolConnection.LogPool.ReturnToPool(ref log);
 
                     responseMessage = new HttpResponseMessage(HttpStatusCode.OK)
                     {
