@@ -70,7 +70,7 @@ namespace WebCommandDevice.ControlDevice.Comet
                     }
                     catch (OperationCanceledException ce)
                     {
-                        responseMessage = new HttpResponseMessage(HttpStatusCode.UpgradeRequired)
+                        responseMessage = new HttpResponseMessage(HttpStatusCode.BadRequest)
                         {
                             RequestMessage = _request
                         };
