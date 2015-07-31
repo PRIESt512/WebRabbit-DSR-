@@ -1,4 +1,6 @@
 using System;
+using System.Net;
+using System.Net.Http;
 using System.Threading.Tasks;
 using System.Web.Http;
 using Newtonsoft.Json.Linq;
@@ -16,18 +18,31 @@ namespace WebCommandDevice.Controllers
             Client client = new Client(deviceId, timeout, Request);
             return client;
         }
-        
+
         [HttpPost]
         [ActionName("commands")]
-        public async Task<IHttpActionResult> SenderCommand()
+        public async Task<HttpResponseMessage> SenderCommand()
         {
             var jo = JObject.Parse(await this.Request.Content.ReadAsStringAsync());
             var id = jo.SelectToken("$.deviceId").Value<String>();
-            using (ISenderCommand command = new Device<ISenderCommand>(id))
+            JObject reason;
+            if (Device<ISenderCommand>.CheckedCommand(jo.SelectToken("$.command").Value<JObject>(), out reason))
             {
-                command.SenderCommand(((JObject)jo.SelectToken("$..command")).ToString());
+                using (ISenderCommand command = new Device<ISenderCommand>(id))
+                {
+                    command.SenderCommand(jo.SelectToken("$..command").ToString());
+                }
+                return new HttpResponseMessage(HttpStatusCode.OK);
             }
-            return Ok();
+            else
+            {
+                return new HttpResponseMessage(HttpStatusCode.BadRequest)
+                {
+                    RequestMessage = Request,
+                    Content = new StringContent(reason.ToString())
+                };
+            }
+
         }
     }
 }

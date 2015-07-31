@@ -38,6 +38,11 @@ namespace WebCommandDevice.ControlDevice.Comet
             get { return this._connectionTimeoutSeconds; }
         }
 
+        /// <summary>
+        /// Определение результатов запроса команды
+        /// </summary>
+        /// <param name="command"></param>
+        /// <returns></returns>
         private Task CompleteResult(IReceiveCommand command)
         {
             _result = new TaskCompletionSource<Command>();
@@ -52,7 +57,6 @@ namespace WebCommandDevice.ControlDevice.Comet
                     command.CleanCommand();
                 }
             }, TaskCreationOptions.LongRunning);
-
             return _result.Task;
         }
 
@@ -64,46 +68,46 @@ namespace WebCommandDevice.ControlDevice.Comet
             {
                 using (IReceiveCommand command = new Device<IReceiveCommand>(_deviceId))
                 {
-                    try
-                    {
-                        await CompleteResult(command);
-                    }
-                    catch (OperationCanceledException ce)
-                    {
-                        responseMessage = new HttpResponseMessage(HttpStatusCode.BadRequest)
-                        {
-                            RequestMessage = _request
-                        };
-                        return responseMessage;
-                    }
-                    if (!DeviceManager.CollectionDeviceCommand.ContainsKey(_deviceId) || DeviceManager.CollectionDeviceCommand[_deviceId] == 255)
-                        DeviceManager.CollectionDeviceCommand[_deviceId] = 0;
-                    DeviceManager.CollectionDeviceCommand[_deviceId]++;
-
-                    var jsonCommand = JObject.Load(_command.Body);
-                    body.Add("commandId", DeviceManager.CollectionDeviceCommand[_deviceId]);
-                    body.Add("command", jsonCommand);
-
-                    var log = PoolConnection.LogPool.GetInstance(_deviceId);
-                    await log.SaveHistoryCommandAsync(body.ToString());
-                    PoolConnection.LogPool.ReturnToPool(ref log);
-
-                    responseMessage = new HttpResponseMessage(HttpStatusCode.OK)
-                    {
-                        RequestMessage = _request,
-                        Content = new StringContent(body.ToString())
-                    };
+                    await CompleteResult(command);
                 }
             }
             catch (NotFoundQueue ex)
             {
-                responseMessage = new HttpResponseMessage(HttpStatusCode.UpgradeRequired)
+                responseMessage = new HttpResponseMessage(HttpStatusCode.OK)
                 {
                     RequestMessage = _request,
                     Content = new StringContent(ex.Message)
                 };
+                return responseMessage;
             }
-            
+            catch (OperationCanceledException ex)
+            {
+                responseMessage = new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    RequestMessage = _request
+                };
+                return responseMessage;
+            }
+
+            if (!DeviceManager.CollectionDeviceCommand.ContainsKey(_deviceId) ||
+                        DeviceManager.CollectionDeviceCommand[_deviceId] == 255)
+                DeviceManager.CollectionDeviceCommand[_deviceId] = 0;
+            DeviceManager.CollectionDeviceCommand[_deviceId]++;
+
+            var jsonCommand = JObject.Load(_command.Body);
+            body.Add("commandId", DeviceManager.CollectionDeviceCommand[_deviceId]);
+            body.Add("command", jsonCommand);
+
+            var log = PoolConnection.LogPool.GetInstance(_deviceId);
+            await log.SaveHistoryCommandAsync(body.ToString());
+            PoolConnection.LogPool.ReturnToPool(ref log);
+
+            responseMessage = new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                RequestMessage = _request,
+                Content = new StringContent(body.ToString())
+            };
+
             return responseMessage;
         }
     }
