@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Runtime.Serialization;
 using System.Text;
 using Newtonsoft.Json.Linq;
 using RabbitMQ.Client;
@@ -13,10 +14,10 @@ namespace WebCommandDevice.ControlDevice.RabbitMQ
     {
         public NotFoundQueue() : base() { }
         public NotFoundQueue(String message) : base(message) { }
-        public NotFoundQueue(String message, System.Exception inner) : base(message, inner) { }
+        public NotFoundQueue(String message, Exception inner) : base(message, inner) { }
 
-        protected NotFoundQueue(System.Runtime.Serialization.SerializationInfo info,
-       System.Runtime.Serialization.StreamingContext context)
+        protected NotFoundQueue(SerializationInfo info,
+       StreamingContext context)
         { }
     }
 
@@ -213,10 +214,10 @@ namespace WebCommandDevice.ControlDevice.RabbitMQ
         /// </summary>
         public enum CommandTime
         {
-            Delete = 15,
+            Delete = 10,
             GetInfo = 5,
-            Upgrade = 30,
-            SetOnOff = 10
+            Upgrade = 3,
+            SetOnOff = 5
         }
     }
 }

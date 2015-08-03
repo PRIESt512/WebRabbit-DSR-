@@ -75,8 +75,7 @@ namespace WebCommandDevice.ControlDevice.Comet
             {
                 responseMessage = new HttpResponseMessage(HttpStatusCode.OK)
                 {
-                    RequestMessage = _request,
-                    Content = new StringContent(ex.Message)
+                    RequestMessage = _request
                 };
                 return responseMessage;
             }
@@ -89,8 +88,7 @@ namespace WebCommandDevice.ControlDevice.Comet
                 return responseMessage;
             }
 
-            if (!DeviceManager.CollectionDeviceCommand.ContainsKey(_deviceId) ||
-                        DeviceManager.CollectionDeviceCommand[_deviceId] == 255)
+            if (!DeviceManager.CollectionDeviceCommand.ContainsKey(_deviceId) || DeviceManager.CollectionDeviceCommand[_deviceId] == 255)
                 DeviceManager.CollectionDeviceCommand[_deviceId] = 0;
             DeviceManager.CollectionDeviceCommand[_deviceId]++;
 
